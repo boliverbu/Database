@@ -1,0 +1,23 @@
+Questions
+
+1. Consider the thread created in start_listener. How many threads with this functionality should be running on the server at any given time?
+Only 1. This thread will contain the listener for any client requests, and create a new thread for any client connections. However, there will only be one thread with a listener.
+
+2. In the listener function, what do each of the following fields of the sockaddr_in struct represent: sin_family, sin_port, and sin_addr.s_addr?
+sin_family represents the family of the socket, which we want to set to AF_INET as we're communicating over the internet. sin_port is the port on which the server will be on, and the port that clients must connect to. sin_addr.s_addr represents the IP address to bind to, which is set to INADDR_ANY to bind to any address.
+
+3. What is the purpose of each of the following function calls in listener: socket, bind, listen, and accept? You should explain what each call does and what the effect would be if it were not called.
+socket: This sets up the socket, returning a file descriptor for the socket. If this function weren't called, there would be no way for the server to communicate with clients, as a socket allows for transfer of information between server and client.
+bind: This binds an address to the socket using the socket's file descriptor. If this wasn't called, the socket wouldn't be bound to the server, and any messages from a client wouldn't reach the server, as it wouldn't be connected to the socket.
+listen: This puts the socket in "listening mode", which means that the socket can now accept connection requests from any clients. If this isn't called, then the client wouldn't be able to reach the socket and thus wouldn't be able to reach the server.
+accept: This accepts a connection request from a client, which is then added to a new thread through client_constructor, which is passed as an argument to listener. If this wasn't called, the list of client requests would simply remain there without being used by the server.
+
+4. Which protocol (TCP or UDP) is used for communication? Why is this protocol used? (Hint: see line 37 in comm.c)
+TCP is used, as it has better reliability as well as preserved order. We know that TCP is being used as the socket type is SOCK_STREAM rather than SOCK_DGRAM which is used by UDPs to send datagrams.
+
+5. Describe what comm_serve does. How are the response and command parameters used? What would happen if the stream pointed to by cxstr were closed?
+comm_serve will first be used to receive the response from the previous command, which is stored in the response parameter. The command parameter points to where the next command is to be stored, and is filled with the next command in comm_serve. If the stream pointed to by cxstr were closed, then there would be an error while running comm_serve, which would lead to a return value of -1 and a "client connection terminated" message being printed to stderr.
+
+6. Describe, in detail, what happens during each iteration of the while loop in the listener function. Be sure to include explanations of all significant function calls.
+First, accept() is called, which accepts the next client address from the client list, storing the address in client_addr and returning a new socket for the client which is then stored in csock. At this point, a connection message is printed to stderr using information stored in client_addr which we just obtained. Then, a new stream is created from csock, and client_constructor is called with this new stream as an argument, creating a new thread that will be running this client.
+
